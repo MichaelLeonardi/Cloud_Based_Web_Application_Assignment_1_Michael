@@ -10,7 +10,10 @@ export default function EscapeRoomPage() {
 
   const [minutes, setMinutes] = useState(5);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [initialTime, setInitialTime] = useState(0); 
   const [timerRunning, setTimerRunning] = useState(false);
+
+  const [playerName, setPlayerName] = useState(""); 
 
   const [gameStarted, setGameStarted] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
@@ -40,8 +43,15 @@ export default function EscapeRoomPage() {
   }, [timeLeft, timerRunning]);
 
   const startGame = () => {
+    if (!playerName.trim()) {
+      alert("Please enter your name first!");
+      return;
+    }
+
     const total = minutes * 60;
     if (total <= 0) return;
+
+    setInitialTime(total);
     setTimeLeft(total);
     setTimerRunning(true);
     setGameStarted(true);
@@ -67,6 +77,8 @@ export default function EscapeRoomPage() {
     setInventory([]);
     setActiveStage(null);
     setTimeLeft(0);
+    setInitialTime(0);
+    setPlayerName("");
     setStage1Input("");
     setStage2Input("");
     setStage3Input("");
@@ -83,7 +95,6 @@ export default function EscapeRoomPage() {
     if (next === 4) endGame("success");
   };
 
-  // ANSWERS
   const checkStage1 = () => {
     if (
       stage1Input.trim() ===
@@ -94,7 +105,7 @@ export default function EscapeRoomPage() {
       setActiveStage(null);
       unlockNextStage();
       setError("");
-    } else setError("❌ Code formatting is incorrect.");
+    } else setError("Code formatting is incorrect.");
   };
 
   const checkStage2 = () => {
@@ -107,7 +118,7 @@ export default function EscapeRoomPage() {
       setActiveStage(null);
       unlockNextStage();
       setError("");
-    } else setError("❌ Loop still incorrect.");
+    } else setError("Loop still incorrect.");
   };
 
   const checkStage3 = () => {
@@ -121,7 +132,7 @@ for (let i = 0; i < arr.length; i++) {
       setActiveStage(null);
       unlockNextStage();
       setError("");
-    } else setError("❌ Array sum logic incorrect.");
+    } else setError("Array sum logic incorrect.");
   };
 
   const checkStage4 = () => {
@@ -134,7 +145,7 @@ for (let i = 0; i < arr.length; i++) {
       setActiveStage(null);
       unlockNextStage();
       setError("");
-    } else setError("❌ Final function is incorrect.");
+    } else setError("Final function is incorrect.");
   };
 
   const hotspot = (unlocked: boolean) => ({
@@ -155,20 +166,30 @@ for (let i = 0; i < arr.length; i++) {
       <div style={darkOverlay} />
 
       <div style={uiLayer}>
-        {/* HUD */}
         <div style={hud}>
           <div>
-            <h2>Stage {currentStage} / 4</h2>
+            <h2>
+              {playerName ? `Player: ${playerName}` : "Player"} — Stage {currentStage} / 4
+            </h2>
             <p>Inventory: {inventory.join(" | ") || "Empty"}</p>
           </div>
 
           {gameStarted && !gameEnded && (
-            <div style={timerBox}>
-              ⏳ {Math.floor(timeLeft / 60)
-                .toString()
-                .padStart(2, "0")}
-              :
+            <div
+              style={{
+                ...timerBox,
+                background:
+                  timeLeft <= initialTime * 0.25
+                    ? "rgba(231, 76, 60, 0.9)"
+                    : timerBox.background,
+                ...(timeLeft <= initialTime * 0.25 ? dangerPulse : {}),
+              }}
+            >
+              ⏳ {Math.floor(timeLeft / 60).toString().padStart(2, "0")}:
               {(timeLeft % 60).toString().padStart(2, "0")}
+              {timeLeft <= initialTime * 0.25 && (
+                <span style={{ marginLeft: "10px" }}>HURRY!</span>
+              )}
             </div>
           )}
         </div>
@@ -176,6 +197,15 @@ for (let i = 0; i < arr.length; i++) {
         {!gameStarted && (
           <div style={setupCard}>
             <h2>Set Escape Timer</h2>
+
+            <input
+              type="text"
+              placeholder="Enter your name"
+              value={playerName}
+              onChange={(e) => setPlayerName(e.target.value)}
+              style={setupInput}
+            />
+
             <input
               type="number"
               min={1}
@@ -183,6 +213,7 @@ for (let i = 0; i < arr.length; i++) {
               onChange={(e) => setMinutes(+e.target.value)}
               style={setupInput}
             />
+
             <button onClick={startGame} style={primaryBtn}>
               Start Escape
             </button>
@@ -202,8 +233,8 @@ for (let i = 0; i < arr.length; i++) {
           <Modal title="Stage 1 – Function Format" error={error}>
             <pre>{`function add(a,b){return a+b;}`}</pre>
             <textarea style={codeBox} value={stage1Input} onChange={(e) => setStage1Input(e.target.value)} />
-            <button onClick={() => setShowHint(!showHint)} style={hintBtn}>💡 Hint</button>
-            {showHint && <p>💡 Proper spacing and line breaks are required.</p>}
+            <button onClick={() => setShowHint(!showHint)} style={hintBtn}>Hint</button>
+            {showHint && <p>Proper spacing and line breaks are required.</p>}
             <button onClick={checkStage1} style={primaryBtn}>Submit</button>
           </Modal>
         )}
@@ -212,8 +243,8 @@ for (let i = 0; i < arr.length; i++) {
           <Modal title="Stage 2 – Fix Loop" error={error}>
             <pre>{`for (let i = 0; i <= 10; i--) {}`}</pre>
             <textarea style={codeBox} value={stage2Input} onChange={(e) => setStage2Input(e.target.value)} />
-            <button onClick={() => setShowHint(!showHint)} style={hintBtn}>💡 Hint</button>
-            {showHint && <p>💡 The loop must INCREASE, not decrease.</p>}
+            <button onClick={() => setShowHint(!showHint)} style={hintBtn}>Hint</button>
+            {showHint && <p>The loop must INCREASE, not decrease.</p>}
             <button onClick={checkStage2} style={primaryBtn}>Submit</button>
           </Modal>
         )}
@@ -222,8 +253,8 @@ for (let i = 0; i < arr.length; i++) {
           <Modal title="Stage 3 – Sum Array" error={error}>
             <pre>{`let arr = [5,10,15];`}</pre>
             <textarea style={codeBox} value={stage3Input} onChange={(e) => setStage3Input(e.target.value)} />
-            <button onClick={() => setShowHint(!showHint)} style={hintBtn}>💡 Hint</button>
-            {showHint && <p>💡 Use a loop and add every value into a running total.</p>}
+            <button onClick={() => setShowHint(!showHint)} style={hintBtn}>Hint</button>
+            {showHint && <p>Use a loop and add every value into a running total.</p>}
             <button onClick={checkStage3} style={primaryBtn}>Submit</button>
           </Modal>
         )}
@@ -232,14 +263,14 @@ for (let i = 0; i < arr.length; i++) {
           <Modal title="Stage 4 – Final Function" error={error}>
             <pre>{`Return "You escaped!"`}</pre>
             <textarea style={codeBox} value={stage4Input} onChange={(e) => setStage4Input(e.target.value)} />
-            <button onClick={() => setShowHint(!showHint)} style={hintBtn}>💡 Hint</button>
-            {showHint && <p>💡 The function must RETURN a string.</p>}
+            <button onClick={() => setShowHint(!showHint)} style={hintBtn}>Hint</button>
+            {showHint && <p>The function must RETURN a string.</p>}
             <button onClick={checkStage4} style={primaryBtn}>Finish</button>
           </Modal>
         )}
 
         {gameEnded && (
-          <Modal title={gameResult === "success" ? "✅ YOU ESCAPED!" : "❌ TIME’S UP"}>
+          <Modal title={gameResult === "success" ? "YOU ESCAPED!" : "TIME’S UP"}>
             <button onClick={resetGame} style={primaryBtn}>Replay</button>
           </Modal>
         )}
@@ -268,7 +299,6 @@ function Modal({
   );
 }
 
-// STYLES
 const pageWrap = {
   backgroundImage: "url('/EscapeRoom.jpg')",
   backgroundSize: "cover",
@@ -301,6 +331,10 @@ const timerBox = {
   padding: "10px 18px",
   borderRadius: "14px",
   fontWeight: 700,
+};
+
+const dangerPulse = {
+  animation: "pulse 1s infinite",
 };
 
 const setupCard = {
